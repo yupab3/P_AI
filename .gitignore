@@ -1,0 +1,13 @@
+# Python 가상 환경
+.venv/
+venv/
+
+# 캐시 폴더
+__pycache__/
+.cache/
+*.pyc
+*.pyo
+*.pyd
+
+# 환경변수
+**/.env
