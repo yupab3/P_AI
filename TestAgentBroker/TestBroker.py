@@ -20,19 +20,19 @@ config_list = [
 
 # 에이전트 정의
 code_writer = AssistantAgent(
-    name="CodeWriter",
+    name="FrontEndEngineer",
     llm_config={"config_list": config_list},
-    system_message="You are a clean and optimized code writer.",
+    system_message="You are a clean and optimized code writer.",그
 )
 
 bug_fixer = AssistantAgent(
-    name="BugFixer",
+    name="BackEndEngineer",
     llm_config={"config_list": config_list},
     system_message="You fix bugs in the code based on feedback.",
 )
 
 reviewer = AssistantAgent(
-    name="CodeReviewer",
+    name="CSSReviewer",
     llm_config={"config_list": config_list},
     system_message="You review the code and give feedback for improvement.",
 )
