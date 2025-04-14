@@ -71,6 +71,6 @@ chat_result = code_executor_agent.initiate_chat(
     code_writer_agent, message="Write Python code to calculate the 14th Fibonacci number."
 )
 
-# pprint.pprint(chat_result)
+pprint.pprint(chat_result)
 
 server.stop()

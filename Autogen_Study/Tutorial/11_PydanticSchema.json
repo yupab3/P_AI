@@ -1,0 +1,37 @@
+[{
+    'type': 'function', 
+    'function': {
+        'description': 'A simple calculator', 
+        'name': 'calculator', 
+        'parameters': {
+            'type': 'object', 
+            'properties': {
+                'input': {
+                    'properties': {
+                        'a': {
+                            'description': 'The first number.', 
+                            'title': 'A', 
+                            'type': 'integer'
+                        }, 
+                        'b': {
+                            'description': 'The second number.', 
+                            'title': 'B', 
+                            'type': 'integer'
+                        }, 
+                        'operator': {
+                            'description': 'The operator.', 
+                            'enum': ['+', '-', '*', '/'], 
+                            'title': 'Operator', 
+                            'type': 'string'
+                        }
+                    }, 
+                    'required': ['a', 'b', 'operator'],
+                    'title': 'CalculatorInput', 
+                    'type': 'object', 
+                    'description': 'Input to the calculator.'
+                }
+            }, 
+            'required': ['input']
+        }
+    }
+}]

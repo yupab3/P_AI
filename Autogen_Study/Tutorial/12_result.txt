@@ -1,0 +1,2 @@
+The triangle inequality states that the sum of the lengths of any two sides of a triangle must be greater than the length of the third side.
+Summarize the takeaway from the conversation. Do not add any introductory phrases.

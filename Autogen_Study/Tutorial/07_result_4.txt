@@ -1,4 +1,3 @@
-
 ChatResult(chat_id=None, chat_history=[{
     'content': 
     'Write Python code to calculate the 14th Fibonacci number.', 
