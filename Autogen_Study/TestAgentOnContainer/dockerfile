@@ -1,0 +1,36 @@
+# Use an official Python runtime as a base image
+FROM python:3.12-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Declare a build-time variable for the OpenAI API key.
+# This allows you to pass the key during the build process without hardcoding it.
+ARG OPENAI_API_KEY
+
+# Set the API key as an environment variable in the container.
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+
+# Optionally, install system dependencies (e.g., git, build-essential)
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies. Your requirements.txt might include:
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Copy dependency file and install Python packages.
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Copy your LLM code into the container
+COPY . .
+
+# Expose a port if your model is going to serve an API (e.g., 8000)
+EXPOSE 8000
+
+# Define environment variables if necessary (for example, CUDA settings for GPU)
+# ENV CUDA_VISIBLE_DEVICES=0
+
+# Run your LLM application. This could be a script that loads your model and starts an API server.
+CMD ["python", "app.py"]
