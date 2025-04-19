@@ -1,0 +1,29 @@
+[project]
+name = "dragonball-models"
+version = "0.1.0"
+description = "dragonball's model controler"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "httpx-sse>=0.4.0",
+    "jwcrypto>=1.5.6",
+    "pydantic>=2.10.6",
+    "pyjwt>=2.10.1",
+    "sse-starlette>=2.2.1",
+    "starlette>=0.46.1",
+    "typing-extensions>=4.12.2",
+    "uvicorn>=0.34.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["common", "hosts"]
+
+[tool.uv.workspace]
+members = [
+    "agents/default/codewriter",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
