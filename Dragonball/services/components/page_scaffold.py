@@ -3,7 +3,6 @@ import mesop.labs as mel
 
 from .side_nav import sidenav
 from .async_poller import async_poller, AsyncAction
-from .poller import polling_buttons
 
 from state.state import AppState
 from state.host_agent_service import UpdateAppState
@@ -32,7 +31,7 @@ def page_scaffold():
     action = (
         AsyncAction(
             value=app_state,
-            duration_seconds=app_state.polling_interval)
+            duration_seconds=1)
         if app_state
         else None
     )
