@@ -334,6 +334,8 @@ class AgentCard(BaseModel):
     url: str
     provider: AgentProvider | None = None
     version: str
+    model: str = ""
+    systemMessage: str = ""
     documentationUrl: str | None = None
     capabilities: AgentCapabilities
     authentication: AgentAuthentication | None = None

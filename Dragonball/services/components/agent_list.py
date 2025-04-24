@@ -15,7 +15,7 @@ def agents_list(
       "Address": [],
       "Name": [],
       "Description": [],
-      "Organization": [],
+      "Model": [],
       "Input Modes": [],
       "Output Modes": [],
       "Streaming": [],
@@ -24,9 +24,7 @@ def agents_list(
     df_data["Address"].append(agent_info.url)
     df_data["Name"].append(agent_info.name)
     df_data["Description"].append(agent_info.description)
-    df_data["Organization"].append(
-        agent_info.provider.organization if agent_info.provider else ''
-    )
+    df_data["Model"].append(agent_info.model)
     df_data["Input Modes"].append(", ".join(agent_info.defaultInputModes))
     df_data["Output Modes"].append(", ".join(agent_info.defaultOutputModes))
     df_data["Streaming"].append(agent_info.capabilities.streaming)
@@ -36,7 +34,7 @@ def agents_list(
           "Address",
           "Name",
           "Description",
-          "Organization",
+          "Model",
           "Input Modes",
           "Output Modes",
           "Streaming",

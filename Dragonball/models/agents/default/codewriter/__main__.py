@@ -30,11 +30,14 @@ def main(host, port):
             tags=["currency conversion", "currency exchange"],
             examples=["What is exchange rate between USD and GBP?"],
         )
+        agent = CurrencyAgent()
         agent_card = AgentCard(
             name="Currency Agent",
             description="Helps with exchange rates for currencies",
             url=f"http://{host}:{port}/",
             version="1.0.0",
+            model=agent.MODEL_NAME,
+            systemMessage=agent.SYSTEM_INSTRUCTION,
             defaultInputModes=CurrencyAgent.SUPPORTED_CONTENT_TYPES,
             defaultOutputModes=CurrencyAgent.SUPPORTED_CONTENT_TYPES,
             capabilities=capabilities,

@@ -60,9 +60,10 @@ class CurrencyAgent:
         "Set response status to completed if the request is complete."
         "Speak korean."
     )
+    MODEL_NAME="gpt-3.5-turbo"
      
     def __init__(self):
-        self.model = ChatOpenAI(model="gpt-3.5-turbo")
+        self.model = ChatOpenAI(model=self.MODEL_NAME)
         self.tools = [get_exchange_rate]
 
         self.graph = create_react_agent(
