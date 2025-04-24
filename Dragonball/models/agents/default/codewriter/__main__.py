@@ -1,8 +1,8 @@
 from common.server import A2AServer
 from common.types import AgentCard, AgentCapabilities, AgentSkill, MissingAPIKeyError
 from common.utils.push_notification_auth import PushNotificationSenderAuth
-from agents.default.codewriter.task_manager import AgentTaskManager
-from agents.default.codewriter.agent import CurrencyAgent
+from task_manager import AgentTaskManager
+from agent import CurrencyAgent
 import click
 import os
 import logging

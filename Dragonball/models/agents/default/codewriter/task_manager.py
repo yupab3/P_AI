@@ -24,7 +24,7 @@ from common.types import (
     InvalidParamsError,
 )
 from common.server.task_manager import InMemoryTaskManager
-from agents.default.codewriter.agent import CurrencyAgent
+from agent import CurrencyAgent
 from common.utils.push_notification_auth import PushNotificationSenderAuth
 import common.server.utils as utils
 from typing import Union
