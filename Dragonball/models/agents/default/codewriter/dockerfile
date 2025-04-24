@@ -1,0 +1,14 @@
+# 베이스 이미지 선택
+FROM python:3.13-slim
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# 의존성 및 소스 복사
+COPY . /app
+
+# 가상환경 없이 설치 (필요 시 uv, pip, poetry 등 사용)
+RUN pip install --upgrade pip && pip install uv && cd /app
+
+# 실행 명령
+CMD ["uv", "run", ".", "--host", "0.0.0.0", "--port", "10000"]
