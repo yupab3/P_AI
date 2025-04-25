@@ -16,3 +16,4 @@ class AgentState:
   create_dialog_open: bool = False
   agent_model: str = ""
   system_message: str = ""
+  api_key: str = ""

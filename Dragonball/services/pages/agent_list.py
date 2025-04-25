@@ -135,11 +135,16 @@ def create_agent_dialog():
                 on_blur=lambda e: setattr(state, "agent_description", e.value)
             )
 
-            me.input(
+            me.select(
                 label="Model Name",
-                value=state.agent_model or "",
-                style=me.Style(width="100%"),
-                on_blur=lambda e: setattr(state, "agent_model", e.value)
+                value=state.agent_model or "gpt-3.5-turbo",  # 기본 선택값
+                options=[
+                    {"label": "GPT-3.5 Turbo", "value": "gpt-3.5-turbo"},
+                    {"label": "GPT-4", "value": "gpt-4"},
+                    {"label": "Gemini 1.5 Pro", "value": "gemini-1.5-pro"},
+                    {"label": "Gemini 1.5 Flash", "value": "gemini-1.5-flash"}
+                ],
+                style=me.Style(width="100%")
             )
 
             me.input(
@@ -147,6 +152,13 @@ def create_agent_dialog():
                 value=state.system_message or "",
                 style=me.Style(width="100%"),
                 on_blur=lambda e: setattr(state, "system_message", e.value)
+            )
+
+            me.input(
+                label="API KEY",
+                value=state.api_key or "",
+                style=me.Style(width="100%"),
+                on_blur=lambda e: setattr(state, "api_key", e.value)
             )
 
             state.output_modes = ["text", "text/plain"]

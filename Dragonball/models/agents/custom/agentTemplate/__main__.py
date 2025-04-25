@@ -21,6 +21,7 @@ def main(host, port):
 
         capabilities = AgentCapabilities(streaming=True, pushNotifications=True)
         skill = AgentSkill(
+            ###작업중 아래 id, name, desc, tags, examples
             id="convert_currency",
             name="Currency Exchange Rates Tool",
             description="Helps with exchange values between various currencies",
