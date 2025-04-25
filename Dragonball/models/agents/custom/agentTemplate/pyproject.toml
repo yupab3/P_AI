@@ -1,0 +1,26 @@
+[project]
+name = "codewriter"
+version = "0.1.0"
+description = "LangGraph codewriter agent with A2A Protocol"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.1.8",
+    "httpx>=0.28.1",
+    "jwcrypto>=1.5.6",
+    "langchain_openai>=0.3.14",
+    "langgraph>=0.3.18",
+    "pydantic>=2.10.6",
+    "pyjwt>=2.0.0,<3.0.0",
+    "python-dotenv>=1.1.0",
+    "sse-starlette>=2.3.3",
+    "starlette>=0.46.2",
+    "uvicorn>=0.34.2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["common", "."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

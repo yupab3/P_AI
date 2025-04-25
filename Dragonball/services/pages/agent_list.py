@@ -30,6 +30,7 @@ def agent_list_page(app_state: AppState):
               with me.box(
                   style=me.Style(display="flex", flex_direction="column", gap=12)
               ):
+                me.text("🤖 새로운 에이전트 등록", style=me.Style(font_size="18px", font_weight="bold"))
                 me.input(
                     label="Agent Address",
                     on_blur=set_agent_address,
@@ -119,14 +120,6 @@ def create_agent_dialog():
     with dialog(state.create_dialog_open):
         with me.box(style=dialog_style):
             me.text("🔧 새로운 에이전트 생성", style=me.Style(font_size="18px", font_weight="bold"))
-
-            me.input(
-                label="Agent Address",
-                value=state.agent_address or "",
-                placeholder="localhost:10000",
-                style=me.Style(width="100%"),
-                on_blur=set_agent_address
-            )
 
             me.input(
                 label="Agent Name",
