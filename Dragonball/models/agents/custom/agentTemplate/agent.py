@@ -1,47 +1,56 @@
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import AIMessage, ToolMessage
 import httpx
+from bs4 import BeautifulSoup
 from typing import Any, Dict, AsyncIterable, Literal
 from pydantic import BaseModel
 import os
 
 memory = MemorySaver()
 
+from bs4 import BeautifulSoup
 
 @tool
-def get_exchange_rate(
-    currency_from: str = "USD",
-    currency_to: str = "EUR",
-    currency_date: str = "latest",
+def web_search(
+    question: str = "",
+    language: str = "english",
+    max_results: int = 5,
 ):
-    """Use this to get current exchange rate.
+    """Use this to search for recent information.
 
     Args:
-        currency_from: The currency to convert from (e.g., "USD").
-        currency_to: The currency to convert to (e.g., "EUR").
-        currency_date: The date for the exchange rate or "latest". Defaults to "latest".
+        question: The question you want to find information about.
+        language: Preferred language for the search results (e.g., "english", "korean").
+        max_results: The maximum number of results to return. Defaults to 5.
 
     Returns:
-        A dictionary containing the exchange rate data, or an error message if the request fails.
+        A dictionary with a 'results' key containing a list of search results,
+        or an error message if the search fails.
     """    
     try:
-        response = httpx.get(
-            f"https://api.frankfurter.app/{currency_date}",
-            params={"from": currency_from, "to": currency_to},
-        )
+        url = "https://html.duckduckgo.com/html/"
+        response = httpx.post(url, data={"q": question}, headers={"User-Agent": "Mozilla/5.0"})
         response.raise_for_status()
 
-        data = response.json()
-        if "rates" not in data:
-            return {"error": "Invalid API response format."}
-        return data
+        soup = BeautifulSoup(response.text, "html.parser")
+        result_list = []
+
+        for a in soup.find_all("a", class_="result__a", limit=max_results):
+            title = a.get_text()
+            link = a["href"]
+            # print("title: ", title)
+            # print("link: ", link)
+            result_list.append({"title": title, "link": link})
+        # print({"result": result_list})
+        return {"result": result_list}  # ✅ 딕셔너리로 감쌈
     except httpx.HTTPError as e:
         return {"error": f"API request failed: {e}"}
     except ValueError:
-        return {"error": "Invalid JSON response from API."}
+        return {"error": "Invalid response format."}
 
 
 class ResponseFormat(BaseModel):
@@ -49,23 +58,28 @@ class ResponseFormat(BaseModel):
     status: Literal["input_required", "completed", "error"] = "input_required"
     message: str
 
-class CurrencyAgent:
+class UserDefinedAgent:
 
     SYSTEM_INSTRUCTION = (
-        "You are a specialized assistant for currency conversions. "
-        "Your sole purpose is to use the 'get_exchange_rate' tool to answer questions about currency exchange rates. "
-        "If the user asks about anything other than currency conversion or exchange rates, "
-        "politely state that you cannot help with that topic and can only assist with currency-related queries. "
+        "If you need to search, use the 'web_search' tool to obtain links, visit those links, gather data, and then answer."
         "Set response status to input_required if the user needs to provide more information."
         "Set response status to error if there is an error while processing the request."
         "Set response status to completed if the request is complete."
-        "Speak korean."
+        "Answer in the same language as the question."
     )
-    MODEL_NAME="gpt-3.5-turbo"
-     
-    def __init__(self):
-        self.model = ChatOpenAI(model=self.MODEL_NAME)
-        self.tools = [get_exchange_rate]
+    MODEL_NAME="gpt-4o"
+
+    def __init__(self, inputmodel: str = "gpt-4o", inputsystem: str = ""):
+        UserDefinedAgent.MODEL_NAME = inputmodel
+        prefix = inputmodel.split("-", 1)[0].lower()
+        
+        if prefix == "gpt":
+            self.model = ChatOpenAI(model=self.MODEL_NAME)
+        elif prefix == "gemini":
+            self.model = ChatGoogleGenerativeAI(model=self.MODEL_NAME)
+        
+        UserDefinedAgent.SYSTEM_INSTRUCTION = f"{inputsystem}\n{UserDefinedAgent.SYSTEM_INSTRUCTION}"
+        self.tools = [web_search]
 
         self.graph = create_react_agent(
             self.model, tools=self.tools, checkpointer=memory, prompt = self.SYSTEM_INSTRUCTION, response_format=ResponseFormat
@@ -90,13 +104,13 @@ class CurrencyAgent:
                 yield {
                     "is_task_complete": False,
                     "require_user_input": False,
-                    "content": "Looking up the exchange rates...",
+                    "content": "Searching...",
                 }
             elif isinstance(message, ToolMessage):
                 yield {
                     "is_task_complete": False,
                     "require_user_input": False,
-                    "content": "Processing the exchange rates..",
+                    "content": "Making response..",
                 }            
         
         yield self.get_agent_response(config)

@@ -2,7 +2,7 @@ from common.server import A2AServer
 from common.types import AgentCard, AgentCapabilities, AgentSkill, MissingAPIKeyError
 from common.utils.push_notification_auth import PushNotificationSenderAuth
 from task_manager import AgentTaskManager
-from agent import CurrencyAgent
+from agent import UserDefinedAgent
 import click
 import os
 import logging
@@ -10,34 +10,53 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def parse_csv(ctx, param, value):
+    if value:
+        return [tag.strip() for tag in value.split(",")]
+    return []
+
 @click.command()
 @click.option("--host", "host", default="0.0.0.0")
-@click.option("--port", "port", default=10000)
-def main(host, port):
-    """Starts the Currency Agent server."""
+@click.option("--port", "post", default=10000)
+@click.option("--name", "inputname", default="")
+@click.option("--desc", "inputdesc", default="")
+@click.option("--model", "inputmodel", default="")
+@click.option("--tags", "inputtags", default="", callback=parse_csv)
+@click.option("--system", "inputsystem", default="")
+@click.option("--examples", "inputexamples", default="")
+@click.option("--key", "inputkey", default="")
+def main(host, port, inputname, inputdesc, inputmodel, inputtags, inputsystem, inputexamples, inputkey):
+    f"""Starts the {inputname} Agent server."""
     try:
-        if not os.getenv("OPENAI_API_KEY"):
-            raise MissingAPIKeyError("OPENAI_API_KEY environment variable not set.")
+        if not inputkey:
+            raise MissingAPIKeyError("No api key.")
+        prefix = inputmodel.split("-", 1)[0].lower()
+
+        if prefix == "gpt":
+            os.environ["OPENAI_API_KEY"] = inputkey
+        elif prefix == "gemini":
+            os.environ["GOOGLE_API_KEY"] = inputkey
+        else:
+            MissingAPIKeyError("This model is not supported.")
 
         capabilities = AgentCapabilities(streaming=True, pushNotifications=True)
         skill = AgentSkill(
-            ###작업중 아래 id, name, desc, tags, examples
-            id="convert_currency",
-            name="Currency Exchange Rates Tool",
-            description="Helps with exchange values between various currencies",
-            tags=["currency conversion", "currency exchange"],
-            examples=["What is exchange rate between USD and GBP?"],
+            id=inputname,
+            name=inputname,
+            description=inputdesc,
+            tags=inputtags,
+            examples=inputexamples, # 현재 사용하지 않지만 추후 개선 가능
         )
-        agent = CurrencyAgent()
+        agent = UserDefinedAgent(inputmodel, inputsystem)
         agent_card = AgentCard(
-            name="Currency Agent",
-            description="Helps with exchange rates for currencies",
+            name=inputname,
+            description=inputdesc,
             url=f"http://{host}:{port}/",
             version="1.0.0",
             model=agent.MODEL_NAME,
             systemMessage=agent.SYSTEM_INSTRUCTION,
-            defaultInputModes=CurrencyAgent.SUPPORTED_CONTENT_TYPES,
-            defaultOutputModes=CurrencyAgent.SUPPORTED_CONTENT_TYPES,
+            defaultInputModes=UserDefinedAgent.SUPPORTED_CONTENT_TYPES,
+            defaultOutputModes=UserDefinedAgent.SUPPORTED_CONTENT_TYPES,
             capabilities=capabilities,
             skills=[skill],
         )
@@ -46,7 +65,7 @@ def main(host, port):
         notification_sender_auth.generate_jwk()
         server = A2AServer(
             agent_card=agent_card,
-            task_manager=AgentTaskManager(agent=CurrencyAgent(), notification_sender_auth=notification_sender_auth),
+            task_manager=AgentTaskManager(agent=UserDefinedAgent(inputmodel, inputsystem), notification_sender_auth=notification_sender_auth),
             host=host,
             port=port,
         )
