@@ -141,8 +141,8 @@ def create_agent_dialog():
                 options=[
                     {"label": "GPT-3.5 Turbo", "value": "gpt-3.5-turbo"},
                     {"label": "GPT-4", "value": "gpt-4"},
-                    {"label": "Gemini 1.5 Pro", "value": "gemini-1.5-pro"},
-                    {"label": "Gemini 1.5 Flash", "value": "gemini-1.5-flash"}
+                    {"label": "Gemini 2.5 Pro", "value": "gemini-2.5-pro-preview-03-25"},
+                    {"label": "Gemini 2.5 Flash", "value": "gemini-2.5-flash-preview-04-17"}
                 ],
                 style=me.Style(width="100%")
             )
@@ -159,6 +159,17 @@ def create_agent_dialog():
                 value=state.api_key or "",
                 style=me.Style(width="100%"),
                 on_blur=lambda e: setattr(state, "api_key", e.value)
+            )
+
+            me.input(
+                label="Tags",
+                value=",".join(state.tags) if state.tags else "",
+                style=me.Style(width="100%"),
+                on_blur=lambda e: setattr(
+                    state,
+                    "tags",
+                    [s.strip() for s in e.value.split(",") if s.strip()]
+                )
             )
 
             state.output_modes = ["text", "text/plain"]
@@ -180,6 +191,8 @@ async def save_agent(e: me.ClickEvent):
     state.agent_description = ""
     state.agent_model = ""
     state.system_message = ""
+    state.api_key = ""
+    state.tags = []
     state.agent_dialog_open = False
     state.create_dialog_open = False
 
@@ -191,6 +204,8 @@ def clear_class():
     state.agent_description = ""
     state.agent_model = ""
     state.system_message = ""
+    state.api_key = ""
+    state.tags = []
     state.stream_supported = False
     state.push_notifications_supported = False
     state.error = ""

@@ -94,7 +94,7 @@ can use to delegate the task.
 
 Execution:
 - For actionable tasks, you can use `create_task` to assign tasks to remote agents to perform.
-- In the AgentCard data for each registered remote agent, extract their description and compare against the user's request, then automatically delegate the task to the remote agent whose description best match.
+- In the AgentCard data for each registered remote agent, extract their skills and compare the tags of all registered skills against the user's request, then automatically delegate the task to the remote agent whose skill tags best match.
 Be sure to include the remote agent name when you respond to the user.
 
 You can use `check_pending_task_states` to check the states of the pending
