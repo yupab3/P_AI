@@ -69,7 +69,7 @@ class HostAgent:
 
   def create_agent(self) -> Agent:
     return Agent(
-        model="gemini-2.0-flash-001",
+        model="gemini-2.5-pro-exp-03-25",
         name="host_agent",
         instruction=self.root_instruction,
         before_model_callback=self.before_model_callback,
@@ -94,6 +94,7 @@ can use to delegate the task.
 
 Execution:
 - For actionable tasks, you can use `create_task` to assign tasks to remote agents to perform.
+- In the AgentCard data for each registered remote agent, extract their description and compare against the user's request, then automatically delegate the task to the remote agent whose description best match.
 Be sure to include the remote agent name when you respond to the user.
 
 You can use `check_pending_task_states` to check the states of the pending
