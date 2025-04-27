@@ -5,6 +5,7 @@ description = "LangGraph codewriter agent with A2A Protocol"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "bs4>=0.0.2",
     "click>=8.1.8",
     "httpx>=0.28.1",
     "jwcrypto>=1.5.6",

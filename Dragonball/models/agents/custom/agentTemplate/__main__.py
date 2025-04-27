@@ -17,13 +17,13 @@ def parse_csv(ctx, param, value):
 
 @click.command()
 @click.option("--host", "host", default="0.0.0.0")
-@click.option("--port", "post", default=10000)
+@click.option("--port", "port", default=10000)
 @click.option("--name", "inputname", default="")
 @click.option("--desc", "inputdesc", default="")
 @click.option("--model", "inputmodel", default="")
-@click.option("--tags", "inputtags", default="", callback=parse_csv)
+@click.option("--tags", "inputtags", default=[], callback=parse_csv)
 @click.option("--system", "inputsystem", default="")
-@click.option("--examples", "inputexamples", default="")
+@click.option("--examples", "inputexamples", default=[], callback=parse_csv)
 @click.option("--key", "inputkey", default="")
 def main(host, port, inputname, inputdesc, inputmodel, inputtags, inputsystem, inputexamples, inputkey):
     f"""Starts the {inputname} Agent server."""

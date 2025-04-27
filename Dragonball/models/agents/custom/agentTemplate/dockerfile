@@ -11,4 +11,4 @@ COPY . /app
 RUN pip install --upgrade pip && pip install uv && cd /app
 
 # 실행 명령
-CMD ["uv", "run", ".", "--host", "0.0.0.0", "--port", "10000"]
+CMD ["uv", "run", ".", "--host", "0.0.0.0", "--port", "10000", "--name", "test Agent", "--desc", "TEST", "--model", "gpt-4o", "--tags", "test,test", "--system", "test", "--key", "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"]
