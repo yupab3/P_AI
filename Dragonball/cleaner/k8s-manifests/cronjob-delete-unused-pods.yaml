@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: delete-unused-pods
+spec:
+  # 매 정각 0분에 실행 (매 시간)
+  schedule: "0 * * * *"
+  # 동시에 여러 잡이 겹치지 않도록 보장
+  concurrencyPolicy: Forbid
+  # 과거 실패 잡이 남기는 기간 (예시: 2일)
+  failedJobsHistoryLimit: 24
+  successfulJobsHistoryLimit: 48
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          # 이미지 빌드 후 registry에 푸시한 경로로 수정하세요.
+          containers:
+            - name: cleaner
+              image: dongyeuk/delete-unused-pods:latest
+              imagePullPolicy: IfNotPresent
+              # 필요 시 환경변수나 볼륨 마운트 지정 가능
+              env:
+                - name: KUBECONFIG
+                  value: ""   # 클러스터 내에서 실행 시 빈 값
+          restartPolicy: OnFailure
