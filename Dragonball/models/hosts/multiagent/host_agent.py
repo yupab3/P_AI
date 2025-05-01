@@ -85,9 +85,14 @@ class HostAgent:
 
   def root_instruction(self, context: ReadonlyContext) -> str:
     current_agent = self.check_state(context)
-    return f"""You are a expert delegator that can delegate the user request to the
-appropriate remote agents.
+    return f"""You are Agent Orchestrator. You are the host agent. Your job is to orchestrate the work of the remote agents.
+The host agent is responsible for orchestrating the work of the remote agents.
 
+  • Role:
+    1. Extract key tags from the user’s query and automatically select the registered agent with the highest tag matching score.
+    2. Dispatch tasks to the chosen agent, and if the output is code, design documents, or similar, decide whether to review it yourself or forward it to a dedicated review agent (e.g., “code_review_agent”) for validation.  
+    3. Manage intermediate traces and ultimately generate a coherent final answer for the user.  
+  
 Discovery:
 - You can use `list_remote_agents` to list the available remote agents you
 can use to delegate the task.
