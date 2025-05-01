@@ -8,7 +8,11 @@ WORKDIR /app
 COPY . /app
 
 # 가상환경 없이 설치 (필요 시 uv, pip, poetry 등 사용)
-RUN pip install --upgrade pip && pip install uv && cd /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade pip \
+    && pip install uv
 
 # 실행 명령
-CMD ["uv", "run", ".", "--host", "0.0.0.0", "--port", "10000", "--name", "test Agent", "--desc", "TEST", "--model", "gpt-4o", "--tags", "test,test", "--system", "test", "--key", "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"]
+CMD ["uv", "run", "."]

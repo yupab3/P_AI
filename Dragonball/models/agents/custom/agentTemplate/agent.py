@@ -60,13 +60,7 @@ class ResponseFormat(BaseModel):
 
 class UserDefinedAgent:
 
-    SYSTEM_INSTRUCTION = (
-        "If you need to search, use the 'web_search' tool to obtain links, visit those links, gather data, and then answer."
-        "Set response status to input_required if the user needs to provide more information."
-        "Set response status to error if there is an error while processing the request."
-        "Set response status to completed if the request is complete."
-        "Answer in the same language as the question."
-    )
+    SYSTEM_INSTRUCTION = ""
     MODEL_NAME="gpt-4o"
 
     def __init__(self, inputmodel: str = "gpt-4o", inputsystem: str = ""):
@@ -78,7 +72,14 @@ class UserDefinedAgent:
         elif prefix == "gemini":
             self.model = ChatGoogleGenerativeAI(model=self.MODEL_NAME)
         
-        UserDefinedAgent.SYSTEM_INSTRUCTION = f"{inputsystem}\n{UserDefinedAgent.SYSTEM_INSTRUCTION}"
+        UserDefinedAgent.SYSTEM_INSTRUCTION = (
+        f"SYSTEM:{inputsystem}:"
+        "In addition to your persona, you may call the `web_search` function for real-time information."
+        "Set response status to input_required if the user needs to provide more information."
+        "Set response status to error if there is an error while processing the request."
+        "Set response status to completed if the request is complete."
+        "Match response language to the question."
+        )
         self.tools = [web_search]
 
         self.graph = create_react_agent(

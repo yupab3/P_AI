@@ -16,7 +16,7 @@ def parse_csv(ctx, param, value):
     return []
 
 @click.command()
-@click.option("--host", "host", default="0.0.0.0")
+@click.option("--host", "host", default="localhost")
 @click.option("--port", "port", default=10000)
 @click.option("--name", "inputname", default="")
 @click.option("--desc", "inputdesc", default="")
