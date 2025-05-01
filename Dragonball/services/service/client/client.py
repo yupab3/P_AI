@@ -38,6 +38,7 @@ class ConversationClient:
   async def _send_request(self, request: JSONRPCRequest) -> dict[str, Any]:
     async with httpx.AsyncClient() as client:
       try:
+        print("Sending request to:", self.base_url + "/" + request.method)
         response = await client.post(
           self.base_url + "/" + request.method, json=request.model_dump()
         )

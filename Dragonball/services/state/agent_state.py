@@ -1,4 +1,8 @@
+import asyncio
 import mesop as me
+from subprocess import Popen
+from dataclasses import field
+from typing import Optional, Dict
 
 @me.stateclass
 class AgentState:
@@ -18,3 +22,4 @@ class AgentState:
   agent_model: str = ""
   system_message: str = ""
   api_key: str = ""
+  port_forwards: Dict[str, int] = field(default_factory=dict)

@@ -104,6 +104,7 @@ class ConversationServer:
     message_data = await request.json()
     message = Message(**message_data['params'])
     message = self.manager.sanitize_message(message)
+    print(message)
     t = threading.Thread(target=lambda: asyncio.run(self.manager.process_message(message)))
     t.start()
     return SendMessageResponse(result=MessageInfo(

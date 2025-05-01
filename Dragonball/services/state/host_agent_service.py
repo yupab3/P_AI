@@ -67,6 +67,7 @@ async def ListRemoteAgents():
 async def AddRemoteAgent(path: str):
   client = ConversationClient(server_url)
   try:
+    print("Registering agent: ", path)
     await client.register_agent(RegisterAgentRequest(params=path))
   except Exception as e:
     print("Failed to register the agent", e)
