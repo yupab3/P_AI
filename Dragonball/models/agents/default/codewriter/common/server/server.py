@@ -46,6 +46,7 @@ class A2AServer:
         self.app.add_route(
             "/.well-known/agent.json", self._get_agent_card, methods=["GET"]
         )
+        self.app.add_route("/health", self._health, methods=["GET"])
 
     def start(self):
         if self.agent_card is None:
@@ -118,3 +119,7 @@ class A2AServer:
         else:
             logger.error(f"Unexpected result type: {type(result)}")
             raise ValueError(f"Unexpected result type: {type(result)}")
+
+    # 쿠버네티스 파드의 서버 상태 체크를 위한 엔드포인트
+    async def _health(self, request: Request) -> JSONResponse:
+        return JSONResponse({"status": "ok", "uptime": "…optional…"}, status_code=200)
