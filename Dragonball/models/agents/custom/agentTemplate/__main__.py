@@ -25,13 +25,15 @@ def parse_csv(ctx, param, value):
 @click.option("--system", "inputsystem", default="")
 @click.option("--examples", "inputexamples", default=[], callback=parse_csv)
 @click.option("--key", "inputkey", default="")
-def main(host, port, inputname, inputdesc, inputmodel, inputtags, inputsystem, inputexamples, inputkey):
+@click.option("--mcpkey", "mcpkey", default="")
+def main(host, port, inputname, inputdesc, inputmodel, inputtags, inputsystem, inputexamples, inputkey, mcpkey):
     f"""Starts the {inputname} Agent server."""
     try:
         if not inputkey:
             raise MissingAPIKeyError("No api key.")
         prefix = inputmodel.split("-", 1)[0].lower()
-
+        if mcpkey:
+            os.environ["SMITHERY_API_KEY"] = mcpkey
         if prefix == "gpt":
             os.environ["OPENAI_API_KEY"] = inputkey
         elif prefix == "gemini":
@@ -65,7 +67,7 @@ def main(host, port, inputname, inputdesc, inputmodel, inputtags, inputsystem, i
         notification_sender_auth.generate_jwk()
         server = A2AServer(
             agent_card=agent_card,
-            task_manager=AgentTaskManager(agent=UserDefinedAgent(inputmodel, inputsystem), notification_sender_auth=notification_sender_auth),
+            task_manager=AgentTaskManager(agent=agent, notification_sender_auth=notification_sender_auth),
             host=host,
             port=port,
         )

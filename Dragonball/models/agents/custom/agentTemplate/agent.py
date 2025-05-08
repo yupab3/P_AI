@@ -4,7 +4,17 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import AIMessage, ToolMessage
+from langgraph.graph import add_messages
+from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import AIMessage, ToolMessage, SystemMessage, HumanMessage
+from react_agent.graph import call_model
+from react_agent.state import State
+from react_agent.utils import load_mcp_config_json
+from react_agent.prompts import SYSTEM_PROMPT
+import os
+import asyncio
 import httpx
+from typing import Optional
 from bs4 import BeautifulSoup
 from typing import Any, Dict, AsyncIterable, Literal
 from pydantic import BaseModel
@@ -13,6 +23,37 @@ import os
 memory = MemorySaver()
 
 from bs4 import BeautifulSoup
+
+@tool
+def mcp_tool(
+    query: Optional[str] = None
+) -> Any:
+    """
+    Uses the React agent's `call_model` function to perform the task end-to-en
+d and return the result.
+    :param query: A string describing the task the user wants to perform.
+    :return: The resulting content from the agent (string or JSON).
+    """
+    # 1) Initialize state with the user's message
+    state: State = {"messages": []}
+    if query:
+        msgs = add_messages(state["messages"], [HumanMessage(content=query)])
+        state["messages"] = msgs
+    # 2) Invoke call_model directly
+    config = RunnableConfig(
+        provider="openai",
+        model="gpt-4o",
+        temperature=0.1,
+        # streaming=True,  # 필요하면
+    )
+    result = asyncio.run(call_model(state, config))
+    # 3) Extract and return the last AI message content
+    messages = result.get("messages", [])
+    print("MCP TOOL DONE")
+    if messages:
+        ai_msg = messages[-1]
+        return ai_msg.content
+    return ""
 
 @tool
 def web_search(
@@ -46,6 +87,7 @@ def web_search(
             # print("link: ", link)
             result_list.append({"title": title, "link": link})
         # print({"result": result_list})
+        print("WEB SEARCH DONE")
         return {"result": result_list}  # ✅ 딕셔너리로 감쌈
     except httpx.HTTPError as e:
         return {"error": f"API request failed: {e}"}
@@ -66,21 +108,43 @@ class UserDefinedAgent:
     def __init__(self, inputmodel: str = "gpt-4o", inputsystem: str = ""):
         UserDefinedAgent.MODEL_NAME = inputmodel
         prefix = inputmodel.split("-", 1)[0].lower()
-        
+        os.environ["LLM_MODEL_NAME"] = self.MODEL_NAME
         if prefix == "gpt":
             self.model = ChatOpenAI(model=self.MODEL_NAME)
         elif prefix == "gemini":
             self.model = ChatGoogleGenerativeAI(model=self.MODEL_NAME)
         
         UserDefinedAgent.SYSTEM_INSTRUCTION = (
-        f"SYSTEM:{inputsystem}:"
-        "In addition to your persona, you may call the `web_search` function for real-time information."
-        "Set response status to input_required if the user needs to provide more information."
-        "Set response status to error if there is an error while processing the request."
-        "Set response status to completed if the request is complete."
-        "Match response language to the question."
+        f"""SYSTEM:{inputsystem}:
+
+        You are a specialized agent with expertise in both web research and MCP tool operations.
+        You may call **exactly two functions** for gathering information:
+        - `web_search(query: str)`: performs an internet search and returns results.
+        - `mcp_tool(server: str, tool: str, params: dict)`: invokes a specific tool on a named MCP server and returns its output.
+         
+        For each user request:
+        1. Determine which function is appropriate (`web_search` for general queries, `mcp_tool` for MCP actions).
+        2. Extract the exact arguments required.
+        3. Invoke **only** that function.
+        4. Return **only** the raw output of the function call in your response.
+         
+        Response status rules:
+        - If you need more details from the user, set status to `input_required`.
+        - If an error occurs during processing, set status to `error`.
+        - When you have successfully satisfied the request, set status to `completed`.
+         
+        Additional rules:
+        - Do **not** include any greetings, explanations, or small talk.
+        - Do **not** ask follow-up questions beyond requesting missing parameters.
+        - Match the response language exactly to the user’s language.
+        """
         )
-        self.tools = [web_search]
+        if os.environ["SMITHERY_API_KEY"]:
+            print("******MCP KEY EXIST******")
+            self.tools = [web_search, mcp_tool]
+        else:
+            print("******MCP KEY IS NOT EXIST******")
+            self.tools = [web_search]
 
         self.graph = create_react_agent(
             self.model, tools=self.tools, checkpointer=memory, prompt = self.SYSTEM_INSTRUCTION, response_format=ResponseFormat

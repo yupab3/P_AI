@@ -9,6 +9,7 @@ COPY . /app
 
 # 가상환경 없이 설치 (필요 시 uv, pip, poetry 등 사용)
 RUN apt-get update \
+    && apt-get install -y nodejs npm \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
     && pip install --upgrade pip \
