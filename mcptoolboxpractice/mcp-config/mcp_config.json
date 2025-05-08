@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "toolbox": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@smithery/toolbox",
+        "--key",
+        "f378aa02-affc-4088-9dec-90fb6ff1d457",
+        "--profile",
+        "latin-minnow-lyUpPr"
+      ]
+    }
+  }
+}
