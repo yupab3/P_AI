@@ -25,8 +25,10 @@ import json
 class A2AClient:
     def __init__(self, agent_card: AgentCard = None, url: str = None):
         if agent_card:
+            print("2agent_card_url :", agent_card.url)
             self.url = agent_card.url
         elif url:
+            print("2url :", url)
             self.url = url
         else:
             raise ValueError("Must provide either agent_card or url")
@@ -38,6 +40,7 @@ class A2AClient:
     async def send_task_streaming(
         self, payload: dict[str, Any]
     ) -> AsyncIterable[SendTaskStreamingResponse]:
+        print("3url: ", self.url)
         request = SendTaskStreamingRequest(params=payload)
         with httpx.Client(timeout=None) as client:
             with connect_sse(

@@ -2,7 +2,7 @@ from common.server import A2AServer
 from common.types import AgentCard, AgentCapabilities, AgentSkill, MissingAPIKeyError
 from common.utils.push_notification_auth import PushNotificationSenderAuth
 from task_manager import AgentTaskManager
-from agent import CurrencyAgent
+from agent import McpAgent
 import click
 import os
 import logging
@@ -17,29 +17,29 @@ logger = logging.getLogger(__name__)
 @click.option("--host", "host", default="0.0.0.0")
 @click.option("--port", "port", default=10000)
 def main(host, port):
-    """Starts the Currency Agent server."""
+    """Starts the Mcp Agent server."""
     try:
         if not os.getenv("OPENAI_API_KEY"):
             raise MissingAPIKeyError("OPENAI_API_KEY environment variable not set.")
 
         capabilities = AgentCapabilities(streaming=True, pushNotifications=True)
         skill = AgentSkill(
-            id="convert_currency",
-            name="Currency Exchange Rates Tool",
-            description="Helps with exchange values between various currencies",
-            tags=["currency conversion", "currency exchange"],
-            examples=["What is exchange rate between USD and GBP?"],
+            id="multi_mcp_agent",
+            name="multi_mcp_agent",
+            description="Helps you use various mcp tools",
+            tags=["mcp server", "mcp tools"],
+            examples=[],
         )
-        agent = CurrencyAgent()
+        agent = McpAgent()
         agent_card = AgentCard(
-            name="Currency Agent",
-            description="Helps with exchange rates for currencies",
+            name="multi_mcp_agent",
+            description="Helps you use various mcp tools",
             url=f"http://{host}:{port}/",
             version="1.0.0",
             model=agent.MODEL_NAME,
             systemMessage=agent.SYSTEM_INSTRUCTION,
-            defaultInputModes=CurrencyAgent.SUPPORTED_CONTENT_TYPES,
-            defaultOutputModes=CurrencyAgent.SUPPORTED_CONTENT_TYPES,
+            defaultInputModes=McpAgent.SUPPORTED_CONTENT_TYPES,
+            defaultOutputModes=McpAgent.SUPPORTED_CONTENT_TYPES,
             capabilities=capabilities,
             skills=[skill],
         )
@@ -48,7 +48,7 @@ def main(host, port):
         notification_sender_auth.generate_jwk()
         server = A2AServer(
             agent_card=agent_card,
-            task_manager=AgentTaskManager(agent=CurrencyAgent(), notification_sender_auth=notification_sender_auth),
+            task_manager=AgentTaskManager(agent=agent, notification_sender_auth=notification_sender_auth),
             host=host,
             port=port,
         )
