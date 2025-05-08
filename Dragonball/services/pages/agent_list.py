@@ -142,6 +142,8 @@ def create_agent_dialog():
             missing.append("System Message")
         if not state.api_key:
             missing.append("API KEY")
+        if state.use_mcp and not state.mcp_api_key:
+            missing.append("MCP API KEY")
         if not state.tags:
             missing.append("Tags")
 
@@ -154,57 +156,90 @@ def create_agent_dialog():
         with me.box(style=dialog_style):
             me.text("🔧 새로운 에이전트 생성", style=me.Style(font_size="18px", font_weight="bold"))
 
-            me.input(
-                label="Agent Name",
-                value=state.agent_name or "",
-                style=me.Style(width="100%"),
-                on_blur=lambda e: setattr(state, "agent_name", e.value)
-            )
+            # 그룹화: 왼쪽 컬럼과 오른쪽 컬럼
+            with me.box(style=me.Style(display="flex", gap=12)):
+                # 왼쪽 입력 필드
+                with me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="column",
+                        gap=12
+                    )
+                ):
+                    me.input(
+                        label="Agent Name",
+                        value=state.agent_name or "",
+                        style=me.Style(width="120%"),
+                        on_blur=lambda e: setattr(state, "agent_name", e.value)
+                    )
+                    me.input(
+                        label="Description",
+                        value=state.agent_description or "",
+                        style=me.Style(width="120%"),
+                        on_blur=lambda e: setattr(state, "agent_description", e.value)
+                    )
+                    me.input(
+                        label="System Message",
+                        value=state.system_message or "",
+                        style=me.Style(width="120%"),
+                        on_blur=lambda e: setattr(state, "system_message", e.value)
+                    )
+                    me.input(
+                        label="Tags",
+                        value=",".join(state.tags) if state.tags else "",
+                        style=me.Style(width="120%"),
+                        on_blur=lambda e: setattr(
+                            state,
+                            "tags",
+                            [s.strip() for s in e.value.split(",") if s.strip()]
+                        )
+                    )
 
-            me.input(
-                label="Description",
-                value=state.agent_description or "",
-                style=me.Style(width="100%"),
-                on_blur=lambda e: setattr(state, "agent_description", e.value)
-            )
+            # 오른쪽 입력 필드 (오른쪽 정렬)
+                with me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="column",
+                        gap=12,
+                        margin=me.Margin(left="80px")
+                    )
+                ):
+                    me.select(
+                        label="Model Name",
+                        value=state.agent_model or "",
+                        options=[
+                            {"label": "GPT-3.5 Turbo", "value": "gpt-3.5-turbo"},
+                            {"label": "GPT-4o", "value": "gpt-4o"},
+                            {"label": "Gemini 2.5 Pro", "value": "gemini-2.5-pro-preview-03-25"},
+                            {"label": "Gemini 2.5 Flash", "value": "gemini-2.5-flash-preview-04-17"}
+                        ],
+                        style=me.Style(width="120%"),
+                        on_selection_change=lambda e: setattr(state, "agent_model", e.value)
+                    )
 
-            me.select(
-                label="Model Name",
-                value=state.agent_model or "",  # 기본 선택값
-                options=[
-                    {"label": "GPT-3.5 Turbo", "value": "gpt-3.5-turbo"},
-                    {"label": "GPT-4o", "value": "gpt-4o"},
-                    {"label": "Gemini 2.5 Pro", "value": "gemini-2.5-pro-preview-03-25"},
-                    {"label": "Gemini 2.5 Flash", "value": "gemini-2.5-flash-preview-04-17"}
-                ],
-                style=me.Style(width="100%"),
-                on_selection_change=lambda e: setattr(state, "agent_model", e.value)
-            )
+                    # 일반 API KEY
+                    me.input(
+                        label="API KEY",
+                        value=state.api_key or "",
+                        style=me.Style(width="120%"),
+                        on_blur=lambda e: setattr(state, "api_key", e.value)
+                    )
 
-            me.input(
-                label="System Message",
-                value=state.system_message or "",
-                style=me.Style(width="100%"),
-                on_blur=lambda e: setattr(state, "system_message", e.value)
-            )
+                    # MCP USE 체크박스
+                    me.checkbox(
+                        label="MCP USE",
+                        checked=state.use_mcp or False,
+                        on_change=lambda e: setattr(state, "use_mcp", e.checked)
+                    )
 
-            me.input(
-                label="API KEY",
-                value=state.api_key or "",
-                style=me.Style(width="100%"),
-                on_blur=lambda e: setattr(state, "api_key", e.value)
-            )
-
-            me.input(
-                label="Tags",
-                value=",".join(state.tags) if state.tags else "",
-                style=me.Style(width="100%"),
-                on_blur=lambda e: setattr(
-                    state,
-                    "tags",
-                    [s.strip() for s in e.value.split(",") if s.strip()]
-                )
-            )
+                    # MCP API KEY (조건부 표시)
+                    if state.use_mcp:
+                        me.input(
+                            label="MCP API KEY",
+                            value=state.mcp_api_key or "",
+                            style=me.Style(width="120%"),
+                            on_blur=lambda e: setattr(state, "mcp_api_key", e.value)
+                        )
 
             state.output_modes = ["text", "text/plain"]
             state.input_modes = ["text", "text/plain"]
@@ -246,6 +281,8 @@ async def save_created_agent(e: me.ClickEvent):
     state.system_message = ""
     state.api_key = ""
     state.tags = []
+    state.use_mcp = False
+    state.mcp_api_key = ""
     state.agent_dialog_open = False
     state.create_dialog_open = False
 
@@ -278,6 +315,7 @@ async def create_agent_on_k8s(state):
         f"--system={state.system_message}",
         f"--examples={",".join([])}",
         f"--key={state.api_key}",
+        f"--mcpkey={state.mcp_api_key}",
     ]
     create_agent_pod(
         image="dongyeuk/agent-template:latest",

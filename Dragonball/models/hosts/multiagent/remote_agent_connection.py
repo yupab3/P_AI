@@ -20,7 +20,6 @@ class RemoteAgentConnections:
   def __init__(self, agent_card: AgentCard):
     self.agent_client = A2AClient(agent_card)
     self.card = agent_card
-
     self.conversation_name = None
     self.conversation = None
     self.pending_tasks = set()

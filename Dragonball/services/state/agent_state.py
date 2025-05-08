@@ -23,3 +23,5 @@ class AgentState:
   system_message: str = ""
   api_key: str = ""
   port_forwards: Dict[str, int] = field(default_factory=dict)
+  use_mcp: bool = False
+  mcp_api_key: str = ""
