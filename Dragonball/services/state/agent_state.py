@@ -2,7 +2,7 @@ import asyncio
 import mesop as me
 from subprocess import Popen
 from dataclasses import field
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 @me.stateclass
 class AgentState:
@@ -25,3 +25,4 @@ class AgentState:
   port_forwards: Dict[str, int] = field(default_factory=dict)
   use_mcp: bool = False
   mcp_api_key: str = ""
+  mcp_tool_config: Dict[str, Any] = field(default_factory=dict)

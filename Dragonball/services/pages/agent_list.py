@@ -240,6 +240,13 @@ def create_agent_dialog():
                             style=me.Style(width="120%"),
                             on_blur=lambda e: setattr(state, "mcp_api_key", e.value)
                         )
+                        me.textarea(
+                            label="MCP TOOL CONFIG (JSON)",
+                            value=state.mcp_tool_config or "",
+                            placeholder='{"duckduckgo-mcp-server": {"command": "...", "args": [...]} }',
+                            style=me.Style(width="120%", height="80px", font_family="monospace"),
+                            on_blur=lambda e: setattr(state, "mcp_tool_config", e.value)
+                        )
 
             state.output_modes = ["text", "text/plain"]
             state.input_modes = ["text", "text/plain"]
@@ -283,6 +290,7 @@ async def save_created_agent(e: me.ClickEvent):
     state.tags = []
     state.use_mcp = False
     state.mcp_api_key = ""
+    state.mcp_tool_config = {}
     state.agent_dialog_open = False
     state.create_dialog_open = False
 
@@ -298,6 +306,9 @@ def clear_class():
     state.stream_supported = False
     state.push_notifications_supported = False
     state.error = ""
+    state.use_mcp = False
+    state.mcp_api_key = ""
+    state.mcp_tool_config = {}
 
 # ----------------- K8S -----------------------
 
@@ -316,6 +327,7 @@ async def create_agent_on_k8s(state):
         f"--examples={",".join([])}",
         f"--key={state.api_key}",
         f"--mcpkey={state.mcp_api_key}",
+        f"--mcp-tools={state.mcp_tool_config}",
     ]
     create_agent_pod(
         image="dongyeuk/agent-template:latest",
@@ -332,7 +344,7 @@ async def create_agent_on_k8s(state):
         config.load_incluster_config()
     v1 = client.CoreV1Api()
 
-    wait_for_service_ready(pod_name=state.agent_name, retries=60, port=local_port)
+    wait_for_service_ready(pod_name=state.agent_name, retries=120, port=local_port)
     pf_cmd = [
         "kubectl", "port-forward",
         "-n", "default",
