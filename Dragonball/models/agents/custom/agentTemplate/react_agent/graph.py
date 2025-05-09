@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Literal, cast
+from typing import Dict, List, Literal, cast, Any
 
 from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -39,7 +39,7 @@ async def make_graph(mcp_tools: Dict[str, Dict[str, str]]):
 
 
 async def call_model(
-    state: State, config: RunnableConfig
+    state: State, config: RunnableConfig, mcp_config: Dict[str, Any],
 ) -> Dict[str, List[AIMessage]]:
     """Call the LLM powering our "agent".
 
@@ -61,15 +61,14 @@ async def call_model(
     )
 
     # Get the MCP config path from mounted volume
-    mcp_config_json_path = "/app/mcp-config/mcp_config.json"
     mcp_tools = {}
-    if os.path.exists(mcp_config_json_path):
-        mcp_tools = await utils.load_mcp_config_json(mcp_config_json_path)
+    if mcp_config:
+        mcp_tools = utils.process_mcp_config(mcp_config)
         # Extract the servers configuration from mcpServers key
         mcp_tools = mcp_tools.get("mcpServers", {})
-        print(f"Loaded MCP tools from {mcp_config_json_path}")
+        print(f"Loaded MCP tools from {mcp_config}")
     else:
-        print(f"Warning: MCP config file not found at {mcp_config_json_path}")
+        print(f"Warning: MCP config not exist at {mcp_config}")
 
     api_key = os.environ["SMITHERY_API_KEY"]
     for cfg in mcp_tools.values():
@@ -93,7 +92,7 @@ async def call_model(
         # Pass messages with the correct dictionary structure
         result = await my_agent.ainvoke({"messages": messages}, config,)
         response = result["messages"][-1]
-
+        return {"messages": [response]}
     # Handle the case when it's the last step and the model still wants to use a tool
     # if state.is_last_step and response.tool_calls:
     #     return {
@@ -105,7 +104,6 @@ async def call_model(
     #         ]
     #     }
     # Return the model's response as a list to be added to existing messages
-    return {"messages": [response]}
 
 
 # Define a new graph

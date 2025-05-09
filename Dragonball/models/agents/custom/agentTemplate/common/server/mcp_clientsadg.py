@@ -3,23 +3,23 @@ import threading
 import asyncio
 import os
 from queue import Queue, Empty
+from typing import Dict, Any
 
-from . import mcp_utils
+from . import mcp_utilsaewrha
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
-mcp_config_json_path = "./mcp-config/mcp_config.json"
 _notified = False  # 알림 여부 플래그
 
-async def run_mcp_client(ready_event: asyncio.Event, ready_queue: Queue):
+async def run_mcp_client(ready_event: asyncio.Event, ready_queue: Queue, config: Dict[str, Any]):
     global _notified
     mcp_tools = {}
     # 1) 설정 JSON 로드
-    if os.path.exists(mcp_config_json_path):
-        cfg = await mcp_utils.load_mcp_config_json(mcp_config_json_path)
+    if config:
+        cfg = mcp_utilsaewrha.process_mcp_config(config)
         mcp_tools = cfg.get("mcpServers", {})
-        print(f"✅ Loaded MCP tools from {mcp_config_json_path}")
+        print(f"✅ Loaded MCP tools from {config}")
     else:
-        print(f"⚠️ Warning: MCP config not found at {mcp_config_json_path}")
+        print(f"⚠️ Warning: MCP config not found at {config}")
         # 에러 상황도 큐에 None 을 보내서 메인 스레드가 알 수 있게
         ready_queue.put(None)
         return

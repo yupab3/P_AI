@@ -9,7 +9,6 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import AIMessage, ToolMessage, SystemMessage, HumanMessage
 from react_agent.graph import call_model
 from react_agent.state import State
-from react_agent.utils import load_mcp_config_json
 from react_agent.prompts import SYSTEM_PROMPT
 import os
 import asyncio
@@ -21,12 +20,13 @@ from pydantic import BaseModel
 import os
 
 memory = MemorySaver()
+mcp_config = {}
 
 from bs4 import BeautifulSoup
 
 @tool
 def mcp_tool(
-    query: Optional[str] = None
+    query: Optional[str] = None,
 ) -> Any:
     """
     Uses the React agent's `call_model` function to perform the task end-to-en
@@ -34,6 +34,10 @@ d and return the result.
     :param query: A string describing the task the user wants to perform.
     :return: The resulting content from the agent (string or JSON).
     """
+    global mcp_config
+    print("**** in mcp_tool config ****")
+    print(mcp_config)
+    print("**** in mcp_tool config ****")
     # 1) Initialize state with the user's message
     state: State = {"messages": []}
     if query:
@@ -46,7 +50,7 @@ d and return the result.
         temperature=0.1,
         # streaming=True,  # 필요하면
     )
-    result = asyncio.run(call_model(state, config))
+    result = asyncio.run(call_model(state, config, mcp_config))
     # 3) Extract and return the last AI message content
     messages = result.get("messages", [])
     print("MCP TOOL DONE")
@@ -105,7 +109,7 @@ class UserDefinedAgent:
     SYSTEM_INSTRUCTION = ""
     MODEL_NAME="gpt-4o"
 
-    def __init__(self, inputmodel: str = "gpt-4o", inputsystem: str = ""):
+    def __init__(self, inputmodel: str = "gpt-4o", inputsystem: str = "", agent_mcp_config: Dict[str, Any] = {}):
         UserDefinedAgent.MODEL_NAME = inputmodel
         prefix = inputmodel.split("-", 1)[0].lower()
         os.environ["LLM_MODEL_NAME"] = self.MODEL_NAME
@@ -113,14 +117,15 @@ class UserDefinedAgent:
             self.model = ChatOpenAI(model=self.MODEL_NAME)
         elif prefix == "gemini":
             self.model = ChatGoogleGenerativeAI(model=self.MODEL_NAME)
-        
+        global mcp_config
+        mcp_config = agent_mcp_config
         UserDefinedAgent.SYSTEM_INSTRUCTION = (
         f"""SYSTEM:{inputsystem}:
 
         You are a specialized agent with expertise in both web research and MCP tool operations.
         You may call **exactly two functions** for gathering information:
         - `web_search(query: str)`: performs an internet search and returns results.
-        - `mcp_tool(server: str, tool: str, params: dict)`: invokes a specific tool on a named MCP server and returns its output.
+        - `mcp_tool(query: Optional[str])`: invokes a specific tool on a named MCP server and returns its output.
          
         For each user request:
         1. Determine which function is appropriate (`web_search` for general queries, `mcp_tool` for MCP actions).
@@ -134,7 +139,6 @@ class UserDefinedAgent:
         - When you have successfully satisfied the request, set status to `completed`.
          
         Additional rules:
-        - Do **not** include any greetings, explanations, or small talk.
         - Do **not** ask follow-up questions beyond requesting missing parameters.
         - Match the response language exactly to the user’s language.
         """
