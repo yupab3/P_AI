@@ -17,97 +17,45 @@ from pydantic import BaseModel
 from typing import Optional
 memory = MemorySaver()
 
-@tool
-def search_engine(
-    query: Optional[str] = None
-) -> Any:
-    """
-    Uses the React agent's `call_model` function to perform the task end-to-end and return the result.
-    :param query: A string describing the task the user wants to perform.
-    :return: The resulting content from the agent (string or JSON).
-    """
-    # 1) Initialize state with the user's message
-    state: State = {"messages": []}
-    print(1)
-    if query:
-        msgs = add_messages(state["messages"], [HumanMessage(content=query)])
-        state["messages"] = msgs
-    # 2) Invoke call_model directly
-    config = RunnableConfig(
-        provider="openai",
-        model="gpt-4o",
-        temperature=0.1,
-        # streaming=True,  # 필요하면
-    )
-    print(2)
-    print(state["messages"])
-    print(2)
-    result = asyncio.run(call_model(state, config))
-    print(3)
-
-    # 3) Extract and return the last AI message content
-    messages = result.get("messages", [])
-    if messages:
-        ai_msg = messages[-1]
-        return ai_msg.content
-    return ""
 
 @tool
-def list_servers(
-    q: Optional[str] = None,
-    page: int = 1,
-    page_size: int = 10,
-    api_key: Optional[str] = None,
-) -> dict:
-    """
-    Retrieves a paginated list of MCP servers from the Smithery Registry.
+def web_search(
+    question: str = "",
+    language: str = "korean",
+    max_results: int = 5,
+):
+    """Use this to search for recent information.
 
     Args:
-        q: Optional search query (semantic search).
-        page: Page number (default: 1).
-        page_size: Number of items per page (default: 10).
-        api_key: Smithery API key. If not provided, uses SMITHERY_API_KEY env var.
+        question: The question you want to find information about.
+        language: Preferred language for the search results (e.g., "english", "korean").
+        max_results: The maximum number of results to return. Defaults to 5.
 
     Returns:
-        A dict with `servers` and `pagination` fields, or an `error` on failure.
-    """
-    print(1)
-    token = api_key or os.getenv("SMITHERY_API_KEY")
-    if not token:
-        return {"error": "No API key provided. Set SMITHERY_API_KEY or pass api_key."}
-
-    url = "https://registry.smithery.ai/servers"
-    headers = {"Authorization": f"Bearer {token}"}
-    params = {
-        "page": page,
-        "pageSize": page_size,
-    }
-    if q:
-        params["q"] = q
-
+        A dictionary with a 'results' key containing a list of search results,
+        or an error message if the search fails.
+    """    
     try:
-        print(2)
-        resp = httpx.get(url, params=params, headers=headers)
-        print(3)
-        resp.raise_for_status()
-        print(4)
-        data = resp.json()
+        url = "https://html.duckduckgo.com/html/"
+        response = httpx.post(url, data={"q": question}, headers={"User-Agent": "Mozilla/5.0"})
+        response.raise_for_status()
 
-        # 필터링: qualifiedName, description 만 추출
-        servers = data.get("servers", [])
-        print(servers)
-        filtered = [
-            {
-                "qualifiedName": srv.get("qualifiedName"),
-                "description": srv.get("description"),
-            }
-            for srv in servers
-        ]
-        return {"servers": filtered}
+        soup = BeautifulSoup(response.text, "html.parser")
+        result_list = []
+
+        for a in soup.find_all("a", class_="result__a", limit=max_results):
+            title = a.get_text()
+            link = a["href"]
+            # print("title: ", title)
+            # print("link: ", link)
+            result_list.append({"title": title, "link": link})
+        # print({"result": result_list})
+        print("WEB SEARCH DONE")
+        return {"result": result_list}  # ✅ 딕셔너리로 감쌈
     except httpx.HTTPError as e:
         return {"error": f"API request failed: {e}"}
     except ValueError:
-        return {"error": "Invalid JSON response from API."}
+        return {"error": "Invalid response format."}
 
 
 class ResponseFormat(BaseModel):
@@ -115,30 +63,26 @@ class ResponseFormat(BaseModel):
     status: Literal["input_required", "completed", "error"] = "input_required"
     message: str
 
-class McpAgent:
+class LocalAgent:
 
     SYSTEM_INSTRUCTION = (
         """
-        You are a specialized agent for using the Smithery “toolbox” MCP tool.  
-        You have exactly four functions available:  
-        - `search_servers`: Search for MCP servers by name, description, or other attributes in the Smithery registry. :contentReference[oaicite:0]{index=0}  
-        - `add_server`: Add an MCP server to your toolbox so its tools become available. :contentReference[oaicite:1]{index=1}  
-        - `remove_server`: Remove a server and all its tools from the toolbox. :contentReference[oaicite:2]{index=2}  
-        - `use_tool`: Execute a specific tool call on an already‐added MCP server. :contentReference[oaicite:3]{index=3}  
+        You are a specialized web search agent.  
+        You have exactly one function available:  
+        - `web_search(question: str, language: str = "korean", max_results: int = 5)`: searches for recent information and returns a dictionary with a `results` list or an error message.
 
         Your sole responsibility is:  
-        1. For every user request, determine which of these four functions is appropriate.  
-        2. Extract the exact arguments needed.  
-        3. Invoke that function via the `toolbox` tool interface.  
-        4. Return only the raw output of that function call as your response.  
+        1. For every user request that needs recent or factual information, determine the appropriate search query, preferred language, and number of results.  
+        2. Invoke `web_search` with those parameters.  
+        3. Return only the raw output of the `web_search` call as your response.
 
         Behavior rules:  
-        - If the user’s request does not map to any of the four functions above, respond with:  
-        “I’m sorry, I can only handle requests related to adding, removing, searching, or invoking MCP servers via the toolbox.”  
-        - Do NOT perform any greetings, explanations, or small talk.  
+        - If the user’s request is not a search request, respond with:  
+        “I’m sorry, I can only handle web search requests.”  
+        - Do NOT include any greetings, explanations, or small talk.  
         - Do NOT ask follow-up questions.  
-        - Always set the response status to `input_required` if you need more information, to `error` if an error occurs, or to `completed` when the function call succeeds.  
-        - Respond only in English.
+        - Always set the response status to `input_required` if you need more information, to `error` if the search fails, or to `completed` when it succeeds.  
+        - Respond only in Korean. 
         """
         # "You are a specialized agent for using the search tool."
         # "Your sole purpose is to identify the keyword for search based on the user’s input, execute it via the `search_engine` function, and return its result. 반드시 `search_engine` 툴을 사용하여 검색한 결과만 응답에 포함해야 합니다."
@@ -152,7 +96,7 @@ class McpAgent:
      
     def __init__(self):
         self.model = ChatOpenAI(model=self.MODEL_NAME)
-        self.tools = [search_engine, list_servers]
+        self.tools = [web_search]
         os.environ["LLM_MODEL_NAME"] = self.MODEL_NAME
         self.graph = create_react_agent(
             self.model, tools=self.tools, checkpointer=memory, prompt = self.SYSTEM_INSTRUCTION, response_format=ResponseFormat
@@ -179,13 +123,13 @@ class McpAgent:
                 yield {
                     "is_task_complete": False,
                     "require_user_input": False,
-                    "content": "Looking up the exchange rates...",
+                    "content": "Making response...",
                 }
             elif isinstance(message, ToolMessage):
                 yield {
                     "is_task_complete": False,
                     "require_user_input": False,
-                    "content": "Processing the exchange rates..",
+                    "content": "Using Tool..",
                 }            
         
         yield self.get_agent_response(config)

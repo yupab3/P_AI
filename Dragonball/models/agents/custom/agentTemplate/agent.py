@@ -53,6 +53,7 @@ d and return the result.
     result = asyncio.run(call_model(state, config, mcp_config))
     # 3) Extract and return the last AI message content
     messages = result.get("messages", [])
+    print(messages)
     print("MCP TOOL DONE")
     if messages:
         ai_msg = messages[-1]
@@ -122,7 +123,7 @@ class UserDefinedAgent:
         UserDefinedAgent.SYSTEM_INSTRUCTION = (
         f"""SYSTEM:{inputsystem}:
 
-        You are a specialized agent with expertise in both web research and MCP tool operations.
+        You are a specialized agent with expertise in both web search and MCP tool operations.
         You may call **exactly two functions** for gathering information:
         - `web_search(query: str)`: performs an internet search and returns results.
         - `mcp_tool(query: Optional[str])`: invokes a specific tool on a named MCP server and returns its output.

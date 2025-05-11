@@ -88,7 +88,9 @@ async def call_model(
             SystemMessage(content=system_message),
             *state["messages"],
         ]
-
+        print(" *** final request *** ")
+        print(messages)
+        print(" *** final request *** ")
         # Pass messages with the correct dictionary structure
         result = await my_agent.ainvoke({"messages": messages}, config,)
         response = result["messages"][-1]

@@ -2,7 +2,7 @@ from common.server import A2AServer
 from common.types import AgentCard, AgentCapabilities, AgentSkill, MissingAPIKeyError
 from common.utils.push_notification_auth import PushNotificationSenderAuth
 from task_manager import AgentTaskManager
-from agent import McpAgent
+from agent import LocalAgent
 import click
 import os
 import logging
@@ -24,22 +24,22 @@ def main(host, port):
 
         capabilities = AgentCapabilities(streaming=True, pushNotifications=True)
         skill = AgentSkill(
-            id="multi_mcp_agent",
-            name="multi_mcp_agent",
-            description="Helps you use various mcp tools",
+            id="local_agent",
+            name="local_agent",
+            description="Answer about your query with web_search tool",
             tags=["mcp server", "mcp tools"],
             examples=[],
         )
-        agent = McpAgent()
+        agent = LocalAgent()
         agent_card = AgentCard(
-            name="multi_mcp_agent",
-            description="Helps you use various mcp tools",
+            name="local_agent",
+            description="Answer about your query with web_search tool",
             url=f"http://{host}:{port}/",
             version="1.0.0",
             model=agent.MODEL_NAME,
             systemMessage=agent.SYSTEM_INSTRUCTION,
-            defaultInputModes=McpAgent.SUPPORTED_CONTENT_TYPES,
-            defaultOutputModes=McpAgent.SUPPORTED_CONTENT_TYPES,
+            defaultInputModes=LocalAgent.SUPPORTED_CONTENT_TYPES,
+            defaultOutputModes=LocalAgent.SUPPORTED_CONTENT_TYPES,
             capabilities=capabilities,
             skills=[skill],
         )
