@@ -21,7 +21,7 @@ packages = ["common", "hosts"]
 
 [tool.uv.workspace]
 members = [
-    "agents/default/codewriter",
+    "agents/default/defaultagent",
     "hosts/cli",
     "hosts/multiagent",
 ]

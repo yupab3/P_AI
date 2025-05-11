@@ -1,7 +1,7 @@
 [project]
-name = "codewriter"
+name = "defaultagent"
 version = "0.1.0"
-description = "LangGraph codewriter agent with A2A Protocol"
+description = "LangGraph defaultagent agent with A2A Protocol"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

@@ -90,7 +90,7 @@ user_proxy.initiate_chat(manager)
 
 # # 개별 Assistant Agent 생성
 # code_writer = AssistantAgent(
-#     name="CodeWriter",
+#     name="defaultagent",
 #     llm_config={"config_list": config_list},
 #     system_message="You are betveteran code engineer. You should always answer with clean code and performance optimization in mind.",
 # )
