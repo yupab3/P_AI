@@ -67,7 +67,7 @@ async def call_model(
     print("---------sys---------")
 
     # Get the MCP config path from mounted volume
-    mcp_config_json_path = "/Users/dongyeuk/Infobank/Dragonball/models/agents/default/codewriter/mcp-config/mcp_config.json"
+    mcp_config_json_path = "/Users/dongyeuk/Infobank/Dragonball/models/agents/default/defaultagent/mcp-config/mcp_config.json"
     mcp_tools = {}
     if os.path.exists(mcp_config_json_path):
         mcp_tools = await utils.load_mcp_config_json(mcp_config_json_path)
